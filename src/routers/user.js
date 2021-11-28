@@ -15,6 +15,7 @@ router.post('/users/signup', async (req, res) => {
     }
 })
 
+// login user
 router.post('/users/login', async(req, res)=>{
     try {
         const user = await User.findByCredentials(req.body.email, req.body.password)
@@ -25,13 +26,37 @@ router.post('/users/login', async(req, res)=>{
     }
 })
 
+// logout a user
+router.post('/users/logout', auth, async(req,res)=>{
+    try{
+        req.user.tokens = req.user.tokens.filter((token)=>{
+            return token.token !== req.token
+        })
+        await req.user.save()
+        res.send()
+    } catch(e){
+        res.status(500).send()
+    }
+})
 
+// logout of all sessions (remove all tokens in the token array)
+router.post('/users/logoutAll', auth, async (req,res)=>{
+    try{
+        req.user.tokens = []
+        await req.user.save()
+        res.send()
+    } catch (e){
+        res.status(500).send()
+    }
+})
+
+
+// get a user profile w/o user id
 router.get('/users/me', auth, async (req, res)=> {
    res.send(req.user)
 })
 
-
-
+// update a user profile
 router.patch('/users/:id', async (req, res) => {
     const updates = Object.keys(req.body)
     const allowedUpdates = ['name', 'email', 'password', 'age']
@@ -57,6 +82,7 @@ router.patch('/users/:id', async (req, res) => {
     }
 })
 
+// get a user profile with user id
 router.get('/users/:id', async (req, res) => {
     const _id = req.params.id
 
@@ -73,6 +99,7 @@ router.get('/users/:id', async (req, res) => {
     }
 })
 
+// delete a user
 router.delete('/users/:id', async (req, res) => {
     try {
         const user = await User.findByIdAndDelete(req.params.id)
