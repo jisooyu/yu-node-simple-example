@@ -39,24 +39,21 @@ const userSchema = new mongoose.Schema({
     }]
 })
 
-userSchema.pre('save', async function (next){
-    const user = this
 
-    if(user.isModified('password')){
-        user.password = await bcrypt.hash(user.password, 8)
-    }
-
-    next()
+userSchema.virtual('posts', {
+    ref: 'Post',
+    localField: '_id',
+    foreignField: 'postedBy'
 })
 
 userSchema.methods.toJSON = function (){
     const user = this
     const userObject = user.toObject()
+ 
     delete userObject.password
     delete userObject.tokens
-
     return userObject
-}
+ }
 
 userSchema.methods.generateAuthToken = async function (){
     const user = this
@@ -83,14 +80,16 @@ userSchema.statics.findByCredentials = async (email, password) => {
     return user
 }
 
-userSchema.methods.toJSON = function (){
-   const user = this
-   const userObject = user.toObject()
 
-   delete userObject.password
-   delete userObject.tokens
-   return userObject
-}
+userSchema.pre('save', async function (next){
+    const user = this
+
+    if(user.isModified('password')){
+        user.password = await bcrypt.hash(user.password, 8)
+    }
+
+    next()
+})
 
 
 const User = mongoose.model('User', userSchema)
