@@ -2,6 +2,7 @@ const mongoose = require('mongoose')
 const validator = require('validator')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
+const Post = require('./post')
 
 const userSchema = new mongoose.Schema({
     name:{
@@ -39,13 +40,14 @@ const userSchema = new mongoose.Schema({
     }]
 })
 
-
+// establish the virtual link with posts
 userSchema.virtual('posts', {
     ref: 'Post',
     localField: '_id',
     foreignField: 'postedBy'
 })
 
+// hide secrets
 userSchema.methods.toJSON = function (){
     const user = this
     const userObject = user.toObject()
@@ -55,6 +57,7 @@ userSchema.methods.toJSON = function (){
     return userObject
  }
 
+ // generate token
 userSchema.methods.generateAuthToken = async function (){
     const user = this
     const token = jwt.sign({ _id: user._id.toString() }, 'thisismynewcourse')
@@ -64,6 +67,7 @@ userSchema.methods.generateAuthToken = async function (){
     return token
 }
 
+// check the credentials
 userSchema.statics.findByCredentials = async (email, password) => {
     const user = await User.findOne({email})
 
@@ -80,7 +84,7 @@ userSchema.statics.findByCredentials = async (email, password) => {
     return user
 }
 
-
+// hash the password
 userSchema.pre('save', async function (next){
     const user = this
 
@@ -91,6 +95,12 @@ userSchema.pre('save', async function (next){
     next()
 })
 
+// delete blogs when the user is deleted
+userSchema.pre('remove', async function (next){
+    const user = this
+    await Post.deleteMany({postedBy: user._id })
+    next()
+})
 
 const User = mongoose.model('User', userSchema)
 
