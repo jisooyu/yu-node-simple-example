@@ -16,15 +16,18 @@ const postSchema = new mongoose.Schema({
         ref: 'User'
     },
     comments: [{
-        comment: {
-            type: String
-        },
-        postedBy: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref:'Comment'
-        }
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Comment'
     }]
 })
+
+// establish the virtual link with posts
+// postSchema.virtual('comments', {
+//     ref: 'Comment',
+//     localField: '_id',
+//     foreignField: 'commentedBy'
+// })
+
 
 const Post = mongoose.model('Post', postSchema)
 
